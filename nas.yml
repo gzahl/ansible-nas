@@ -97,6 +97,10 @@
       tags:
         - duplicati
 
+    - role: kopia
+      tags:
+        - kopia
+
     - role: emby
       tags:
         - emby

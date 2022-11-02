@@ -1,0 +1,28 @@
+---
+kopia_enabled: false
+kopia_available_externally: false
+
+# directories
+kopia_config_directory: "{{ docker_home }}/kopia/config"
+kopia_cache_directory: "{{ docker_home }}/kopia/cache"
+kopia_logs_directory: "{{ docker_home }}/kopia/logs"
+kopia_rclone_directory: "{{ docker_home }}/kopia/rclone"
+
+# permissions
+kopia_data_permissions: "ro" # set this to rw to enable the ability to restore data
+
+# uid / gid
+kopia_user_id: "0"
+kopia_group_id: "0"
+
+# network
+kopia_port: "51515"
+kopia_hostname: "kopia"
+
+kopia_username: "kopia"
+kopia_password: "kopia123"
+
+kopia_memory: 1g
+
+# docker
+kopia_container_name: kopia
