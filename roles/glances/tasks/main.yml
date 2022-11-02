@@ -1,4 +1,3 @@
----
 - name: Start Glances
   block:
     - name: Create Glances Docker Container
