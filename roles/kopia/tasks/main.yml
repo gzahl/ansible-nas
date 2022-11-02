@@ -1,0 +1,51 @@
+---
+- name: Start Kopia
+  block:
+    - name: Create Kopia Directory
+      file:
+        path: "{{ item }}"
+        state: directory
+      with_items:
+        - "{{ kopia_config_directory }}"
+        - "{{ kopia_logs_directory }}"
+        - "{{ kopia_cache_directory }}"
+        - "{{ kopia_rclone_directory }}"
+
+    - name: Kopia Docker Container
+      docker_container:
+        name: "{{ kopia_container_name }}"
+        image: kopia/kopia
+        pull: true
+        ports:
+          - "{{ kopia_port }}:51515"
+        volumes:
+          - "{{ kopia_config_directory }}:/app/config:rw"
+          - "{{ kopia_cache_directory }}:/app/cache:rw"
+          - "{{ kopia_logs_directory }}:/app/logs:rw"
+          - "{{ kopia_rclone_directory }}:/app/rclone:rw"
+          - "{{ samba_shares_root }}:/app/backup/shares:{{ kopia_data_permissions }}"
+          - "{{ docker_home }}:/app/backup/docker:{{ kopia_data_permissions }}"
+          - "/etc/timezone:/etc/timezone:ro"
+        entrypoint: ["/bin/kopia", "server", "--insecure", "--address=0.0.0.0:51515", "--override-username={{ kopia_username }}", "--server-username={{ kopia_username }}", "--server-password={{ kopia_password }}"]  
+        env:
+          TZ: "{{ ansible_nas_timezone }}"
+          PUID: "{{ kopia_user_id }}"
+          PGID: "{{ kopia_group_id }}"
+        restart_policy: unless-stopped
+        memory: "{{ kopia_memory }}"
+        labels:
+          traefik.enable: "{{ kopia_available_externally | string }}"
+          traefik.http.routers.duplicati.rule: "Host(`{{ kopia_hostname }}.{{ ansible_nas_domain }}`)"
+          traefik.http.routers.duplicati.tls.certresolver: "letsencrypt"
+          traefik.http.routers.duplicati.tls.domains[0].main: "{{ ansible_nas_domain }}"
+          traefik.http.routers.duplicati.tls.domains[0].sans: "*.{{ ansible_nas_domain }}"
+          traefik.http.services.duplicati.loadbalancer.server.port: "51515"
+  when: kopia_enabled is true
+
+- name: Stop Kopia
+  block:
+    - name: Stop Kopia
+      docker_container:
+        name: "{{ kopia_container_name }}"
+        state: absent
+  when: kopia_enabled is false
