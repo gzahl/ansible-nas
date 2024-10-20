@@ -26,11 +26,24 @@
           - "{{ samba_shares_root }}:/app/backup/shares:{{ kopia_data_permissions }}"
           - "{{ docker_home }}:/app/backup/docker:{{ kopia_data_permissions }}"
           - "/etc/timezone:/etc/timezone:ro"
-        entrypoint: ["/bin/kopia", "server", "--insecure", "--address=0.0.0.0:51515", "--override-username={{ kopia_username }}", "--server-username={{ kopia_username }}", "--server-password={{ kopia_password }}"]  
+        entrypoint: 
+          - "/bin/kopia"
+          - "server"
+          - "--insecure"
+          - "--disable-csrf-token-checks"
+          - "--address=0.0.0.0:51515"
+          - "--override-username={{ kopia_username }}@{{ kopia_hostname }}"
+          - "--server-username={{ kopia_username }}@{{ kopia_hostname }}"
+          - "--server-password={{ kopia_password }}"
+        domainname: "{{ kopia_username }}"
+        hostname: "{{ kopia_hostname }}"
         env:
           TZ: "{{ ansible_nas_timezone }}"
           PUID: "{{ kopia_user_id }}"
           PGID: "{{ kopia_group_id }}"
+          USER: "{{ kopia_username }}"
+          KOPIA_PASSWORD: "{{ kopia_password }}"
+          KOPIA_PERSIST_CREDENTIALS_ON_CONNECT: "true"
         restart_policy: unless-stopped
         memory: "{{ kopia_memory }}"
         labels:
